@@ -16,7 +16,7 @@ function App() {
 
   return (
     <Routes>
-      <Route path="/" element={<Home />} />
+      <Route path="/" element={<Home cart={cart} setCart={setCart}/>} />
 
       {/* Passed cart & setCart props to /products */}
       <Route 
