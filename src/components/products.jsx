@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import "../products.css";
+import "./Cart.css"; // Dedicated cart styling
 import { 
   fetchAllproducts, 
   fetchSearchProducts, 
@@ -8,15 +9,60 @@ import {
 import Nav from "./nav.jsx";
 import "../Home.css";
 import { useEffect, useState } from "react";
-import { Link } from "react-router";
+import { Link,useNavigate } from "react-router";
 import Category from "./category.jsx";
 
-function Products() {
+
+
+function Products({ cart, setCart }) {
   // --- STATE MANAGEMENT ---
   const [category, setCategory] = useState("All Categories");
   const [userInput, setUserinput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(0);
+  const navigate = useNavigate();
+
+  // --- CART STATE ---
+  
+  const [isCartOpen, setIsCartOpen] = useState(false);
+
+  // --- CART ACTIONS ---
+  const addToCart = (product) => {
+    setCart((prevCart) => {
+      const existing = prevCart.find((item) => item.id === product.id);
+      if (existing) {
+        return prevCart.map((item) =>
+          item.id === product.id
+            ? { ...item, quantity: item.quantity + 1 }
+            : item
+        );
+      }
+      return [...prevCart, { ...product, quantity: 1 }];
+    });
+  };
+
+  const removeFromCart = (id) => {
+    setCart((prevCart) => prevCart.filter((item) => item.id !== id));
+  };
+
+  const updateQuantity = (id, amount) => {
+    setCart((prevCart) =>
+      prevCart
+        .map((item) => {
+          if (item.id === id) {
+            const newQty = item.quantity + amount;
+            return newQty > 0 ? { ...item, quantity: newQty } : null;
+          }
+          return item;
+        })
+        .filter(Boolean)
+    );
+  };
+
+  const totalCartItems = cart.reduce((total, item) => total + item.quantity, 0);
+  const totalPrice = cart
+    .reduce((total, item) => total + item.price * item.quantity, 0)
+    .toFixed(2);
 
   const limit = 10;
   const skip = page * limit;
@@ -27,33 +73,25 @@ function Products() {
     if (userInput.trim() === "") return;
     setSearchQuery(userInput);
     setUserinput("");
-    
   };
 
   const nextPageButton = () => setPage((prev) => prev + 1);
   const previousPage = () => setPage((prev) => Math.max(0, prev - 1));
 
-  // Auto-scroll when search query changes
+  // Auto-scrolls
   useEffect(() => {
     if (searchQuery !== "") {
-      document.getElementById("search-results")?.scrollIntoView({
-        behavior: "smooth",
-      });
+      document.getElementById("search-results")?.scrollIntoView({ behavior: "smooth" });
     }
   }, [searchQuery]);
 
-  // Auto-scroll when category selection changes
   useEffect(() => {
     if (category !== "All Categories" && category !== "") {
-      document.getElementById("category-results")?.scrollIntoView({
-        behavior: "smooth",
-      });
+      document.getElementById("category-results")?.scrollIntoView({ behavior: "smooth" });
     }
   }, [category]);
 
   // --- REACT QUERY FETCHES ---
-
-  // 1. Fetch All Products (Paginated)
   const { 
     isLoading: allLoading, 
     isError: allIsError, 
@@ -64,17 +102,12 @@ function Products() {
     queryFn: () => fetchAllproducts(skip, limit),
   });
 
-  // 2. Fetch Search Results (Enabled only when searchQuery exists)
-  const {
-    isLoading: searchLoading,
-    data: searchData,
-  } = useQuery({
+  const { isLoading: searchLoading, data: searchData } = useQuery({
     queryKey: ["search", searchQuery],
     queryFn: () => fetchSearchProducts(searchQuery),
     enabled: searchQuery !== "",
   });
 
-  // 3. Fetch Products By Category (Enabled when category is selected)
   const {
     isLoading: categoryLoading,
     isError: categoryIsError,
@@ -86,7 +119,6 @@ function Products() {
     enabled: category !== "" && category !== "All Categories",
   });
 
-  // Derived data
   const searchDataResult = searchData?.products ?? [];
   const categoryProductsResult = categoryData?.products ?? [];
   const defaultProducts = allData?.products ?? [];
@@ -97,6 +129,64 @@ function Products() {
   return (
     <>
       <Nav />
+
+      {/* Floating Cart Trigger Button */}
+      <button className="cart-trigger-btn" onClick={() => setIsCartOpen(true)}>
+        🛒 Cart ({totalCartItems})
+      </button>
+
+      {/* Cart Drawer */}
+      <div className={`cart-overlay ${isCartOpen ? "open" : ""}`} onClick={() => setIsCartOpen(false)}>
+        <div className="cart-drawer" onClick={(e) => e.stopPropagation()}>
+          <div className="cart-header">
+            <h2>Your Cart ({totalCartItems})</h2>
+            <button className="close-cart-btn" onClick={() => setIsCartOpen(false)}>✕</button>
+          </div>
+
+          <div className="cart-items">
+            {cart.length === 0 ? (
+              <p className="empty-cart-msg">Your cart is currently empty.</p>
+            ) : (
+              cart.map((item) => (
+                <div key={item.id} className="cart-item">
+                  <img src={item.thumbnail} alt={item.title} className="cart-item-img" />
+                  <div className="cart-item-details">
+                    <h4>{item.title}</h4>
+                    <p className="cart-item-price">${item.price}</p>
+                    <div className="qty-controls">
+                      <button onClick={() => updateQuantity(item.id, -1)}>-</button>
+                      <span>{item.quantity}</span>
+                      <button onClick={() => updateQuantity(item.id, 1)}>+</button>
+                    </div>
+                  </div>
+                  <button className="remove-btn" onClick={() => removeFromCart(item.id)}>
+                    🗑️
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+
+          {cart.length > 0 && (
+            <div className="cart-footer">
+              <div className="cart-total">
+                <span>Total:</span>
+                <strong>${totalPrice}</strong>
+              </div>
+              <button 
+  className="checkout-btn" 
+  onClick={() => {
+    setIsCartOpen(false);
+    navigate('/checkout');
+  }}
+>
+  Proceed to Checkout
+</button>
+            </div>
+          )}
+        </div>
+      </div>
+
       <div className="products-page">
         {/* Header */}
         <section className="products-header">
@@ -129,11 +219,10 @@ function Products() {
             </form>
           </div>
 
-          {/* Category Component */}
           <Category category={category} setCategory={setCategory} />
         </section>
 
-        {/* SEARCH RESULTS SECTION */}
+        {/* SEARCH RESULTS */}
         {searchLoading && <p>Searching products...</p>}
         {searchDataResult.length > 0 && (
           <section id="search-results" className="search-results">
@@ -142,29 +231,26 @@ function Products() {
               <h2>Results for "{searchQuery}"</h2>
               <p>{searchDataResult.length} products found</p>
             </div>
-
             <div className="products-grid">
               {searchDataResult.map((product) => (
-                <ArticleCard key={product.id} product={product} />
+                <ArticleCard key={product.id} product={product} onAddToCart={addToCart} />
               ))}
             </div>
           </section>
         )}
 
-        {/* CATEGORY FILTER RESULTS SECTION */}
+        {/* CATEGORY FILTER RESULTS */}
         {category !== "All Categories" && category !== "" && (
           <section id="category-results" className="category-results">
             <div className="search-results-header">
               <span>CATEGORY FILTER</span>
               <h2>Category: {category}</h2>
             </div>
-
             {categoryLoading && <p>Loading category products...</p>}
             {categoryIsError && <p>Error: {categoryError.message}</p>}
-
             <div className="products-grid">
               {categoryProductsResult.map((product) => (
-                <ArticleCard key={product.id} product={product} />
+                <ArticleCard key={product.id} product={product} onAddToCart={addToCart} />
               ))}
             </div>
           </section>
@@ -174,7 +260,7 @@ function Products() {
         <h1 className="text-code">ALL PRODUCTS</h1>
         <section className="products-grid">
           {defaultProducts.map((product) => (
-            <ArticleCard key={product.id} product={product} />
+            <ArticleCard key={product.id} product={product} onAddToCart={addToCart} />
           ))}
         </section>
 
@@ -185,9 +271,7 @@ function Products() {
               ← Previous
             </button>
           )}
-
           <span className="page-number">Page {page}</span>
-
           <button onClick={nextPageButton} className="pagination-btn">
             Next →
           </button>
@@ -197,8 +281,8 @@ function Products() {
   );
 }
 
-// Reusable Product Card Component inside the file
-function ArticleCard({ product }) {
+// Reusable Product Card Component
+function ArticleCard({ product, onAddToCart }) {
   return (
     <article className="product-card">
       <div className="product-image">
@@ -213,7 +297,9 @@ function ArticleCard({ product }) {
         </Link>
         <div className="product-footer">
           <strong>${product.price}</strong>
-          <button type="button">Add +</button>
+          <button className="add-to-cart-btn" onClick={() => onAddToCart(product)}>
+            Add to Cart
+          </button>
         </div>
       </div>
     </article>
