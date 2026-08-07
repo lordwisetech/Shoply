@@ -1,17 +1,25 @@
 import { Link } from "react-router";
+import Navigation from "./Navigation.jsx";
 import "../Home.css";
-import { useQuery } from "@tanstack/react-query";
+import Features from './Features.jsx'
+import { useQuery, keepPreviousData } from "@tanstack/react-query"; // 1. Import keepPreviousData
 import { fetchOneproducts } from "./api/api";
-import Nav from "./nav.jsx";
 import { useEffect, useState } from "react";
+import Products from "./products.jsx";
+import Vegetables from "./vegetables.jsx";
 
 function Home({ cart = [], setCart }) {
   const [nextProducts, setNextProducts] = useState(1);
+  const [slideState, setSlideState] = useState("slide-in");
 
-  // Change featured product every 10 seconds (10,000 ms)
   useEffect(() => {
     const interval = setInterval(() => {
-      setNextProducts(Math.floor(Math.random() * 194) + 1);
+      setSlideState("slide-out");
+
+      setTimeout(() => {
+        setNextProducts(Math.floor(Math.random() * 194) + 1);
+        setSlideState("slide-in");
+      }, 500);
     }, 10000);
 
     return () => clearInterval(interval);
@@ -25,6 +33,8 @@ function Home({ cart = [], setCart }) {
   } = useQuery({
     queryKey: ["one products", nextProducts],
     queryFn: () => fetchOneproducts(nextProducts),
+    // 2. This keeps the current product visible while fetching the next one
+    placeholderData: keepPreviousData, 
   });
 
   const handleAddToCart = () => {
@@ -45,7 +55,8 @@ function Home({ cart = [], setCart }) {
     });
   };
 
-  if (isLoading) {
+  // 3. ONLY show loading on the very first render when there is no product data at all
+  if (isLoading && !singleProducts) {
     return <h1>Loading...</h1>;
   }
 
@@ -53,9 +64,12 @@ function Home({ cart = [], setCart }) {
     return <h2>{error.message}</h2>;
   }
 
-  return (
+  return (<>
+  <Navigation />
+  <br /> <br /> <br /> <br /> <br /> 
     <div className="home">
-     
+      
+
 
       <section className="hero">
         <div className="hero-text">
@@ -72,16 +86,14 @@ function Home({ cart = [], setCart }) {
             and discover something perfect for you.
           </p>
 
-          <Link to="/products">
-            <button className="shop-btn">
-              Shop Now →
-            </button>
+          <Link to="/">
+            <button className="shop-btn">Shop Now →</button>
           </Link>
         </div>
 
         {/* Featured Product Card */}
         {singleProducts && (
-          <div className="product-card">
+          <div className={`product-card ${slideState}`}>
             <div className="product-image">
               <img
                 src={singleProducts.thumbnail}
@@ -90,19 +102,13 @@ function Home({ cart = [], setCart }) {
             </div>
 
             <div className="product-info">
-              <span className="category">
-                {singleProducts.category}
-              </span>
+              <span className="category">{singleProducts.category}</span>
 
               <h2>{singleProducts.title}</h2>
 
-              <div className="rating">
-                ⭐ {singleProducts.rating}
-              </div>
+              <div className="rating">⭐ {singleProducts.rating}</div>
 
-              <p className="description">
-                {singleProducts.description}
-              </p>
+              <p className="description">{singleProducts.description}</p>
 
               <div className="product-bottom">
                 <strong>${singleProducts.price}</strong>
@@ -115,8 +121,14 @@ function Home({ cart = [], setCart }) {
           </div>
         )}
       </section>
+      
     </div>
-  );
+    <Features/>
+
+    <Products/>
+    <Vegetables/>
+
+ </> );
 }
 
 export default Home;

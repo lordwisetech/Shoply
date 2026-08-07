@@ -1,33 +1,36 @@
+import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import "../products.css";
-import "./Cart.css"; // Dedicated cart styling
+import { Link } from "react-router";
+import '../assets/css/bootstrap.min.css';
+import '../assets/css/style.css';
+
 import { 
   fetchAllproducts, 
   fetchSearchProducts, 
   fetchProductsByCategory 
 } from "./api/api";
-import Nav from "./nav.jsx";
-import "../Home.css";
-import { useEffect, useState } from "react";
-import { Link,useNavigate } from "react-router";
-import Category from "./category.jsx";
 
+const CATEGORIES_LIST = [
+  { label: "All Products", value: "All Categories" },
+  { label: "Groceries", value: "groceries" },
+  { label: "Beauty", value: "beauty" },
+  { label: "Fragrances", value: "fragrances" },
+  { label: "Furniture", value: "furniture" }
+];
 
-
-function Products({ cart, setCart }) {
+function Products({ setCart }) {
   // --- STATE MANAGEMENT ---
   const [category, setCategory] = useState("All Categories");
   const [userInput, setUserinput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(0);
-  const navigate = useNavigate();
 
-  // --- CART STATE ---
-  
-  const [isCartOpen, setIsCartOpen] = useState(false);
+  const limit = 8;
+  const skip = page * limit;
 
-  // --- CART ACTIONS ---
+  // --- CART ACTION ---
   const addToCart = (product) => {
+    if (!setCart) return;
     setCart((prevCart) => {
       const existing = prevCart.find((item) => item.id === product.id);
       if (existing) {
@@ -41,55 +44,16 @@ function Products({ cart, setCart }) {
     });
   };
 
-  const removeFromCart = (id) => {
-    setCart((prevCart) => prevCart.filter((item) => item.id !== id));
-  };
-
-  const updateQuantity = (id, amount) => {
-    setCart((prevCart) =>
-      prevCart
-        .map((item) => {
-          if (item.id === id) {
-            const newQty = item.quantity + amount;
-            return newQty > 0 ? { ...item, quantity: newQty } : null;
-          }
-          return item;
-        })
-        .filter(Boolean)
-    );
-  };
-
-  const totalCartItems = cart.reduce((total, item) => total + item.quantity, 0);
-  const totalPrice = cart
-    .reduce((total, item) => total + item.price * item.quantity, 0)
-    .toFixed(2);
-
-  const limit = 10;
-  const skip = page * limit;
-
   // --- HANDLERS ---
   const handleSearch = (e) => {
     e.preventDefault();
     if (userInput.trim() === "") return;
+    setCategory("All Categories"); // Clear category so search results take priority
     setSearchQuery(userInput);
-    setUserinput("");
   };
 
   const nextPageButton = () => setPage((prev) => prev + 1);
   const previousPage = () => setPage((prev) => Math.max(0, prev - 1));
-
-  // Auto-scrolls
-  useEffect(() => {
-    if (searchQuery !== "") {
-      document.getElementById("search-results")?.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [searchQuery]);
-
-  useEffect(() => {
-    if (category !== "All Categories" && category !== "") {
-      document.getElementById("category-results")?.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [category]);
 
   // --- REACT QUERY FETCHES ---
   const { 
@@ -123,186 +87,152 @@ function Products({ cart, setCart }) {
   const categoryProductsResult = categoryData?.products ?? [];
   const defaultProducts = allData?.products ?? [];
 
-  if (allLoading) return <h1>Loading...</h1>;
-  if (allIsError) return <h2>{allError.message}</h2>;
+  // Determine active product list to render
+  const displayedProducts = searchQuery !== "" 
+    ? searchDataResult 
+    : (category !== "All Categories" ? categoryProductsResult : defaultProducts);
+
+  const isCurrentLoading = searchQuery !== "" 
+    ? searchLoading 
+    : (category !== "All Categories" ? categoryLoading : allLoading);
 
   return (
-    <>
-      <Nav />
+    <div className="container-fluid fruite py-5">
+      <div className="container py-5">
+        <div className="tab-class text-center">
+          
+          {/* Header + Search Bar + Category Pills */}
+          <div className="row g-4 mb-4 align-items-center">
+            <div className="col-lg-4 text-start">
+              <h1>Our Products</h1>
+            </div>
 
-      {/* Floating Cart Trigger Button */}
-      <button className="cart-trigger-btn" onClick={() => setIsCartOpen(true)}>
-        🛒 Cart ({totalCartItems})
-      </button>
+            <div className="col-lg-8">
+              {/* Functional Search Form */}
+              {/* Template Styled Search Bar */}
+<form onSubmit={handleSearch} className="d-flex justify-content-end mb-4">
+  <div className="position-relative w-100" style={{ maxWidth: "450px" }}>
+    <input
+      type="text"
+      className="form-control border-2 border-secondary w-100 py-3 px-4 rounded-pill"
+      placeholder="Search products..."
+      value={userInput}
+      onChange={(e) => setUserinput(e.target.value)}
+      style={{ paddingRight: "120px" }}
+    />
+    <button
+      type="submit"
+      className="btn btn-primary border-2 border-secondary py-3 px-4 position-absolute rounded-pill text-white h-100"
+      style={{ top: 0, right: 0 }}
+    >
+      <i className="fa fa-search me-1"></i> Search
+    </button>
+  </div>
+</form>
 
-      {/* Cart Drawer */}
-      <div className={`cart-overlay ${isCartOpen ? "open" : ""}`} onClick={() => setIsCartOpen(false)}>
-        <div className="cart-drawer" onClick={(e) => e.stopPropagation()}>
-          <div className="cart-header">
-            <h2>Your Cart ({totalCartItems})</h2>
-            <button className="close-cart-btn" onClick={() => setIsCartOpen(false)}>✕</button>
+              {/* Category Pills */}
+              <ul className="nav nav-pills d-inline-flex text-center">
+                {CATEGORIES_LIST.map((cat, index) => (
+                  <li key={index} className="nav-item">
+                    <button
+                      className={`nav-link d-flex m-2 py-2 bg-light rounded-pill border-0 ${
+                        category === cat.value && searchQuery === "" ? "active" : ""
+                      }`}
+                      onClick={() => {
+                        setUserinput("");
+                        setSearchQuery("");
+                        setCategory(cat.value);
+                      }}
+                    >
+                      <span className="text-dark" style={{ width: "130px" }}>
+                        {cat.label}
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
 
-          <div className="cart-items">
-            {cart.length === 0 ? (
-              <p className="empty-cart-msg">Your cart is currently empty.</p>
-            ) : (
-              cart.map((item) => (
-                <div key={item.id} className="cart-item">
-                  <img src={item.thumbnail} alt={item.title} className="cart-item-img" />
-                  <div className="cart-item-details">
-                    <h4>{item.title}</h4>
-                    <p className="cart-item-price">${item.price}</p>
-                    <div className="qty-controls">
-                      <button onClick={() => updateQuantity(item.id, -1)}>-</button>
-                      <span>{item.quantity}</span>
-                      <button onClick={() => updateQuantity(item.id, 1)}>+</button>
+          {/* Products Grid */}
+          <div className="tab-content">
+            <div className="tab-pane fade show p-0 active">
+              
+              {isCurrentLoading ? (
+                <div className="py-5"><h2>Loading Products...</h2></div>
+              ) : allIsError || categoryIsError ? (
+                <div className="py-5"><h2>Error: {allError?.message || categoryError?.message}</h2></div>
+              ) : displayedProducts.length === 0 ? (
+                <div className="py-5"><h3>No products found.</h3></div>
+              ) : (
+                <div className="row g-4">
+                  {displayedProducts.map((product) => (
+                    <div key={product.id} className="col-md-6 col-lg-4 col-xl-3">
+                      <div className="rounded position-relative fruite-item border border-secondary">
+                        
+                        {/* Image */}
+                        <div className="fruite-img">
+                          <img 
+                            src={product.thumbnail} 
+                            className="img-fluid w-100 rounded-top" 
+                            alt={product.title}
+                            style={{ height: '220px', objectFit: 'cover' }}
+                          />
+                        </div>
+
+                        {/* Category Badge */}
+                        <div 
+                          className="text-white bg-secondary px-3 py-1 rounded position-absolute" 
+                          style={{ top: "10px", left: "10px" }}
+                        >
+                          {product.category}
+                        </div>
+
+                        {/* Info Body */}
+                        <div className="p-4 border-top-0 rounded-bottom text-start">
+                          <Link to={`/products/${product.id}`} className="text-decoration-none text-dark">
+                            <h4 className="text-truncate">{product.title}</h4>
+                          </Link>
+                          <p className="text-muted text-truncate">{product.description}</p>
+                          
+                          <div className="d-flex justify-content-between align-items-center flex-lg-wrap">
+                            <p className="text-dark fs-5 fw-bold mb-0">${product.price}</p>
+                            <button 
+                              className="btn border border-secondary rounded-pill px-3 text-primary"
+                              onClick={() => addToCart(product)}
+                            >
+                              <i className="fa fa-shopping-bag me-2 text-primary"></i> Add to cart
+                            </button>
+                          </div>
+                        </div>
+
+                      </div>
                     </div>
-                  </div>
-                  <button className="remove-btn" onClick={() => removeFromCart(item.id)}>
-                    🗑️
-                  </button>
+                  ))}
                 </div>
-              ))
-            )}
+              )}
+
+            </div>
           </div>
 
-          {cart.length > 0 && (
-            <div className="cart-footer">
-              <div className="cart-total">
-                <span>Total:</span>
-                <strong>${totalPrice}</strong>
-              </div>
-              <button 
-  className="checkout-btn" 
-  onClick={() => {
-    setIsCartOpen(false);
-    navigate('/checkout');
-  }}
->
-  Proceed to Checkout
-</button>
+          {/* Pagination Controls */}
+          {searchQuery === "" && category === "All Categories" && (
+            <div className="d-flex justify-content-center align-items-center gap-3 mt-5">
+              {page > 0 && (
+                <button onClick={previousPage} className="btn btn-primary rounded-pill text-white px-4">
+                  ← Previous
+                </button>
+              )}
+              <span className="fw-bold">Page {page + 1}</span>
+              <button onClick={nextPageButton} className="btn btn-primary rounded-pill text-white px-4">
+                Next →
+              </button>
             </div>
           )}
+
         </div>
       </div>
-
-      <div className="products-page">
-        {/* Header */}
-        <section className="products-header">
-          <div>
-            <span>OUR STORE</span>
-            <h1>Explore Products</h1>
-            <p>Discover quality products picked for you.</p>
-          </div>
-          <div className="product-count">
-            <strong>{allData?.total || 0}</strong>
-            <p>All Products</p>
-          </div>
-          <div className="product-count">
-            <strong>{defaultProducts.length}</strong>
-            <p>Current page Products</p>
-          </div>
-        </section>
-
-        {/* Search & Category Filter Tools */}
-        <section className="products-tools">
-          <div className="search-box">
-            <form onSubmit={handleSearch} className="search-box">
-              <input
-                type="text"
-                placeholder="Search products..."
-                value={userInput}
-                onChange={(e) => setUserinput(e.target.value)}
-              />
-              <button type="submit">Search</button>
-            </form>
-          </div>
-
-          <Category category={category} setCategory={setCategory} />
-        </section>
-
-        {/* SEARCH RESULTS */}
-        {searchLoading && <p>Searching products...</p>}
-        {searchDataResult.length > 0 && (
-          <section id="search-results" className="search-results">
-            <div className="search-results-header">
-              <span>SEARCH RESULTS</span>
-              <h2>Results for "{searchQuery}"</h2>
-              <p>{searchDataResult.length} products found</p>
-            </div>
-            <div className="products-grid">
-              {searchDataResult.map((product) => (
-                <ArticleCard key={product.id} product={product} onAddToCart={addToCart} />
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* CATEGORY FILTER RESULTS */}
-        {category !== "All Categories" && category !== "" && (
-          <section id="category-results" className="category-results">
-            <div className="search-results-header">
-              <span>CATEGORY FILTER</span>
-              <h2>Category: {category}</h2>
-            </div>
-            {categoryLoading && <p>Loading category products...</p>}
-            {categoryIsError && <p>Error: {categoryError.message}</p>}
-            <div className="products-grid">
-              {categoryProductsResult.map((product) => (
-                <ArticleCard key={product.id} product={product} onAddToCart={addToCart} />
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* ALL PRODUCTS (DEFAULT LIST) */}
-        <h1 className="text-code">ALL PRODUCTS</h1>
-        <section className="products-grid">
-          {defaultProducts.map((product) => (
-            <ArticleCard key={product.id} product={product} onAddToCart={addToCart} />
-          ))}
-        </section>
-
-        {/* PAGINATION */}
-        <div className="pagination">
-          {page > 0 && (
-            <button onClick={previousPage} className="pagination-btn">
-              ← Previous
-            </button>
-          )}
-          <span className="page-number">Page {page}</span>
-          <button onClick={nextPageButton} className="pagination-btn">
-            Next →
-          </button>
-        </div>
-      </div>
-    </>
-  );
-}
-
-// Reusable Product Card Component
-function ArticleCard({ product, onAddToCart }) {
-  return (
-    <article className="product-card">
-      <div className="product-image">
-        <img src={product.thumbnail} alt={product.title} />
-        <span className="category-badge">{product.category}</span>
-      </div>
-
-      <div className="product-content">
-        <div className="rating">⭐ {product.rating}</div>
-        <Link to={`/products/${product.id}`} className="product-title-link">
-          <h2>{product.title}</h2>
-        </Link>
-        <div className="product-footer">
-          <strong>${product.price}</strong>
-          <button className="add-to-cart-btn" onClick={() => onAddToCart(product)}>
-            Add to Cart
-          </button>
-        </div>
-      </div>
-    </article>
+    </div>
   );
 }
 

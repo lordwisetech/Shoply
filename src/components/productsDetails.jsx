@@ -1,7 +1,9 @@
 import React from "react";
 import { useParams, useNavigate } from "react-router";
 import "../ProductDetails.css";
-import Nav from "./nav.jsx";
+import { Link } from "react-router";
+
+
 import { useQuery } from "@tanstack/react-query";
 import { fetchOneproducts } from "./api/api.js";
 
@@ -53,12 +55,14 @@ function ProductDetails({ cart = [], setCart }) {
 
   return (
     <>
-      <Nav cart={cart} />
+     
 
       <main className="details-page">
         {/* Breadcrumb */}
         <div className="breadcrumb">
-          Home / Products / {product.title}
+          <Link to="/">
+            Home  
+          </Link>  / Products / {product.title}
         </div>
 
         {/* Product */}

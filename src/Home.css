@@ -189,3 +189,31 @@ html {
   }
 
 }
+/* Base Product Card Animation Setup */
+.product-card {
+  transition: transform 0.5s ease-in-out, opacity 0.5s ease-in-out;
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Slide Out to the Left */
+.product-card.slide-out {
+  transform: translateX(-120px);
+  opacity: 0;
+}
+
+/* Slide In from the Right */
+.product-card.slide-in {
+  animation: slideInFromRight 0.5s ease-in-out forwards;
+}
+
+@keyframes slideInFromRight {
+  0% {
+    transform: translateX(120px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
