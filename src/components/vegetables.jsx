@@ -10,8 +10,8 @@ import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 
 // Import project styles
-import '../assets/css/bootstrap.min.css';
-import '../assets/css/style.css';
+// import '../assets/css/bootstrap.min.css';
+// import '../assets/css/style.css';
 
 import { fetchProductsByCategory } from './api/api';
 

@@ -1,13 +1,13 @@
 import { Link } from "react-router";
 import Navigation from "./Navigation.jsx";
-import "../Home.css";
+import "./Home.css";
 import Features from './Features.jsx'
 import { useQuery, keepPreviousData } from "@tanstack/react-query"; // 1. Import keepPreviousData
-import { fetchOneproducts } from "./api/api";
+import { fetchOneproducts } from "../api/api.js";
 import { useEffect, useState } from "react";
 import Products from "./products.jsx";
 import Vegetables from "./vegetables.jsx";
-import Services from "./services.jsx";
+import Services from "../services.jsx";
 import Banner from "./banner.jsx";
 import BestsellerProducts from "./Bestseller.jsx";
 import Facts from "./fact.jsx";
