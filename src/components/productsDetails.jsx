@@ -126,8 +126,7 @@ function ProductDetails({ cart = [], setCart }) {
 
   return (
     <>
-      <Navbar />
-      <br /><br /><br /><br /><br />
+      
 
       <main className="details-page">
         {/* Breadcrumb */}

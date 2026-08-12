@@ -9,10 +9,6 @@ import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 
-// Import project styles
-// import '../assets/css/bootstrap.min.css';
-// import '../assets/css/style.css';
-
 import { fetchProductsByCategory } from './api/api';
 
 function FeaturedPhones({ setCart }) {
@@ -25,8 +21,12 @@ function FeaturedPhones({ setCart }) {
   const phoneProducts = data?.products ?? [];
 
   const addToCart = (product) => {
-    if (!setCart) return;
-    setCart((prevCart) => {
+    if (!setCart) {
+      console.warn("setCart prop was not passed to FeaturedPhones component!");
+      return;
+    }
+
+    setCart((prevCart = []) => {
       const existing = prevCart.find((item) => item.id === product.id);
       if (existing) {
         return prevCart.map((item) =>
@@ -107,6 +107,7 @@ function FeaturedPhones({ setCart }) {
                       <button
                         type="button"
                         className="btn border border-secondary rounded-pill px-3 text-primary"
+                        style={{ borderColor: "#81c408" }}
                         onClick={() => addToCart(product)}
                       >
                         <i className="fa fa-shopping-bag me-2 text-primary"></i> Add to cart

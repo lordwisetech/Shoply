@@ -142,7 +142,7 @@ function Home({ cart = [], setCart }) {
       
 <br/><br/><br/><br/><br/><br/>
       <div className="home">
-        <section className="hero">
+        <section className="hero ">
           <div className="hero-text">
             <span className="small-title">FEATURED PRODUCT</span>
 
@@ -195,9 +195,9 @@ function Home({ cart = [], setCart }) {
       </div>
 
       <Features />
-      <Products />
+      <Products  setCart={setCart}/>
       <Services />
-      <Vegetables />
+      <Vegetables  setCart={setCart}/>
       <Banner />
       <BestsellerProducts />
       <Facts />
