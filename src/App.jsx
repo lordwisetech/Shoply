@@ -4,6 +4,8 @@ import Home from './components/Home.jsx';
 import Products from './components/products.jsx';
 import ProductsDetails from './components/productsDetails.jsx';
 import Checkout from './components/Checkout.jsx'; // 1. Added missing Checkout import
+import Shop from './components/shop/shop.jsx'; // 1. Added missing Shop import
+import NotFound from './components/NotFound'
 
 function App() {
   // 2. State definition
@@ -33,7 +35,10 @@ function App() {
         path="/checkout" 
         element={<Checkout cart={cart} onClearCart={handleClearCart} />}
       />
+       <Route path="/shop" element={<Shop />} />
+      <Route path="*" element={<NotFound />} />
     </Routes>
+    
   );
 }
 

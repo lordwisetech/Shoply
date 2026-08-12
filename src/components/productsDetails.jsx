@@ -2,7 +2,8 @@ import React from "react";
 import { useParams, useNavigate } from "react-router";
 import "../ProductDetails.css";
 import { Link } from "react-router";
-
+import Navbar from "./Navigation.jsx";
+import Footer from './Footer.jsx'
 
 import { useQuery } from "@tanstack/react-query";
 import { fetchOneproducts } from "./api/api.js";
@@ -55,14 +56,15 @@ function ProductDetails({ cart = [], setCart }) {
 
   return (
     <>
-     
+     <Navbar/>
+     <br/><br/><br/><br/><br/>
 
       <main className="details-page">
         {/* Breadcrumb */}
         <div className="breadcrumb">
           <Link to="/">
-            Home  
-          </Link>  / Products / {product.title}
+           <p>Home </p> 
+          </Link>  / {product.title}
         </div>
 
         {/* Product */}
@@ -130,6 +132,7 @@ function ProductDetails({ cart = [], setCart }) {
           </div>
         </section>
       </main>
+      <Footer/>
     </>
   );
 }

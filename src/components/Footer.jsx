@@ -124,7 +124,7 @@ function Footer() {
               <p>Email: Example@gmail.com</p>
               <p>Phone: +0123 4567 8910</p>
               <p>Payment Accepted</p>
-              <img src="img/payment.png" className="img-fluid" alt="Accepted Payment Methods" />
+              <img src="../payment.png" className="img-fluid" alt="Accepted Payment Methods" />
             </div>
           </div>
 

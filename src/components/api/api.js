@@ -49,3 +49,10 @@ export async function fetchProductsByCategory(category) {
 
   return response.json();
 }
+
+export async function fetchProducts (){
+  const respose = await fetch(`https://dummyjson.com/products?limit=100`);
+  if(!respose.ok){    throw new Error("failed to fetch products");  
+  }
+  return respose.json();
+}
