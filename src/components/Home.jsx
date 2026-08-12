@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
-import Navigation from "./Navigation.jsx";
+
 import "../Home.css";
 import Features from "./Features.jsx";
 import { fetchOneproducts } from "./api/api";
@@ -116,7 +116,7 @@ function Home({ cart = [], setCart }) {
   if (isLoading && !singleProducts) {
     return (
       <>
-        <Navigation />
+        
         <LoadingHome />
         <Footer />
         <Copyright />
@@ -139,7 +139,7 @@ function Home({ cart = [], setCart }) {
 
   return (
     <>
-      <Navigation />
+      
 
       <div className="home">
         <section className="hero">
@@ -202,7 +202,7 @@ function Home({ cart = [], setCart }) {
       <BestsellerProducts />
       <Facts />
       <Footer />
-      <Copyright />
+      
     </>
   );
 }

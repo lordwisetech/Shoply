@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import Navbar from "../Navigation.jsx"; 
+ 
 import { fetchProducts } from "../api/api"; 
 import Footer from "../Footer.jsx";
 
@@ -152,7 +152,7 @@ export default function Shop({ cart = [], setCart }) {
   if (isLoading) {
     return (
       <>
-        <Navbar />
+        
         <LoadingShop />
         <Footer />
       </>
@@ -163,7 +163,7 @@ export default function Shop({ cart = [], setCart }) {
 
   return (
     <>
-      <Navbar />
+      
       <SinglePage/>
 
       <div className="container-fluid fruite py-5">

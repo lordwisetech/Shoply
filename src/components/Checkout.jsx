@@ -1,247 +1,512 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router';
-import './Checkout.css';
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router";
+import Footer from "./Footer.jsx"; // Adjust path if needed
 
 export default function Checkout({ cart = [], onClearCart }) {
   const navigate = useNavigate();
 
-  // Form state
+  // Form State
   const [formData, setFormData] = useState({
-    fullName: '',
-    email: '',
-    address: '',
-    city: '',
-    zipCode: '',
-    cardNumber: '',
-    expDate: '',
-    cvv: '',
+    firstName: "",
+    lastName: "",
+    companyName: "",
+    address: "",
+    city: "",
+    country: "",
+    postcode: "",
+    mobile: "",
+    email: "",
+    createAccount: false,
+    shipToDifferent: false,
+    orderNotes: "",
   });
 
-  const [isSubmitted, setIsSubmitted] = useState(false);
-  
-  // 1. State to save order summary before cart gets cleared
-  const [orderDetails, setOrderDetails] = useState(null);
+  // Shipping & Payment Options
+  const [shippingCost, setShippingCost] = useState(0); // 0 = Free, 15 = Flat, 8 = Local
+  const [paymentMethod, setPaymentMethod] = useState("Transfer");
 
-  // Calculate totals from active cart
-  const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const shipping = subtotal > 0 ? 10.00 : 0;
-  const grandTotal = (subtotal + shipping).toFixed(2);
+  // Calculate live totals
+  const subtotal = cart.reduce(
+    (acc, item) => acc + (item.price || 0) * (item.quantity || 1),
+    0
+  );
+  const total = subtotal + Number(shippingCost);
 
+  // Input change handler
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
   };
 
+  // Submit Order Handler
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (cart.length === 0) return;
 
-    // 2. Lock in order details BEFORE clearing the cart
-    setOrderDetails({
-      fullName: formData.fullName,
-      address: formData.address,
-      city: formData.city,
-      totalPaid: grandTotal,
-    });
+    if (cart.length === 0) {
+      alert("Your cart is empty! Please add products before placing an order.");
+      return;
+    }
 
-    setIsSubmitted(true);
+    alert("Order Placed Successfully! Thank you for your purchase.");
 
-    // 3. Clear the cart in App component
     if (onClearCart) {
       onClearCart();
     }
+
+    navigate("/");
   };
 
-  // Confirmation screen after placing order
-  if (isSubmitted && orderDetails) {
-    return (
-      <div className="checkout-container">
-        <div className="order-success-card">
-          <div className="success-icon">🎉</div>
-          <h2>Thank You for Your Order!</h2>
-          <p>We've received your order and are processing it right now.</p>
-          <div className="order-details-summary">
-            <p><strong>Deliver to:</strong> {orderDetails.fullName}</p>
-            <p><strong>Address:</strong> {orderDetails.address}, {orderDetails.city}</p>
-            <p><strong>Total Paid:</strong> ${orderDetails.totalPaid}</p>
-          </div>
-          <button className="back-home-btn" onClick={() => navigate('/products')}>
-            Back to Products
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // If cart is empty and order was not submitted
-  if (cart.length === 0) {
-    return (
-      <div className="checkout-container">
-        <div className="empty-checkout-card">
-          <h2>Your Cart is Empty</h2>
-          <p>Add some products before proceeding to checkout.</p>
-          <Link to="/products" className="back-home-btn">
-            Explore Products
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="checkout-container">
-      <h1 className="checkout-title">Checkout</h1>
-
-      <div className="checkout-grid">
-        {/* Left Side: Shipping & Payment Form */}
-        <form className="checkout-form" onSubmit={handleSubmit}>
-          <section className="form-section">
-            <h3>Shipping Information</h3>
-            <div className="input-group">
-              <label>Full Name</label>
-              <input
-                type="text"
-                name="fullName"
-                required
-                placeholder="John Doe"
-                value={formData.fullName}
-                onChange={handleChange}
-              />
-            </div>
-
-            <div className="input-group">
-              <label>Email Address</label>
-              <input
-                type="email"
-                name="email"
-                required
-                placeholder="john@example.com"
-                value={formData.email}
-                onChange={handleChange}
-              />
-            </div>
-
-            <div className="input-group">
-              <label>Shipping Address</label>
-              <input
-                type="text"
-                name="address"
-                required
-                placeholder="123 Main Street"
-                value={formData.address}
-                onChange={handleChange}
-              />
-            </div>
-
-            <div className="input-row">
-              <div className="input-group">
-                <label>City</label>
-                <input
-                  type="text"
-                  name="city"
-                  required
-                  placeholder="New York"
-                  value={formData.city}
-                  onChange={handleChange}
-                />
-              </div>
-
-              <div className="input-group">
-                <label>ZIP / Postal Code</label>
-                <input
-                  type="text"
-                  name="zipCode"
-                  required
-                  placeholder="10001"
-                  value={formData.zipCode}
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
-          </section>
-
-          <section className="form-section">
-            <h3>Payment Details</h3>
-            <div className="input-group">
-              <label>Card Number</label>
-              <input
-                type="text"
-                name="cardNumber"
-                required
-                placeholder="4532 •••• •••• 8890"
-                maxLength="19"
-                value={formData.cardNumber}
-                onChange={handleChange}
-              />
-            </div>
-
-            <div className="input-row">
-              <div className="input-group">
-                <label>Expiration Date</label>
-                <input
-                  type="text"
-                  name="expDate"
-                  required
-                  placeholder="MM/YY"
-                  maxLength="5"
-                  value={formData.expDate}
-                  onChange={handleChange}
-                />
-              </div>
-
-              <div className="input-group">
-                <label>CVV</label>
-                <input
-                  type="password"
-                  name="cvv"
-                  required
-                  placeholder="123"
-                  maxLength="4"
-                  value={formData.cvv}
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
-          </section>
-
-          <button type="submit" className="place-order-btn">
-            Place Order (${grandTotal})
-          </button>
-        </form>
-
-        {/* Right Side: Order Summary */}
-        <aside className="order-summary-card">
-          <h3>Order Summary</h3>
-          <div className="summary-items">
-            {cart.map((item) => (
-              <div key={item.id} className="summary-item">
-                <img src={item.thumbnail} alt={item.title} />
-                <div className="summary-item-info">
-                  <h4>{item.title}</h4>
-                  <p>Qty: {item.quantity}</p>
-                </div>
-                <span>${(item.price * item.quantity).toFixed(2)}</span>
-              </div>
-            ))}
-          </div>
-
-          <div className="summary-totals">
-            <div className="summary-row">
-              <span>Subtotal</span>
-              <span>${subtotal.toFixed(2)}</span>
-            </div>
-            <div className="summary-row">
-              <span>Flat Shipping</span>
-              <span>${shipping.toFixed(2)}</span>
-            </div>
-            <hr />
-            <div className="summary-row total">
-              <span>Total</span>
-              <strong>${grandTotal}</strong>
-            </div>
-          </div>
-        </aside>
+    <>
+      {/* Top Banner / Breadcrumb Header */}
+      <div
+        className="container-fluid py-5 text-center bg-dark"
+        style={{
+          marginTop: "100px",
+          backgroundImage:
+            "linear-gradient(rgba(0, 0, 0, 0.65), rgba(0, 0, 0, 0.65)), url('https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1600&q=80')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      >
+        <h1 className="text-white display-6 fw-bold">Checkout</h1>
+        <ol className="breadcrumb justify-content-center mb-0">
+          <li className="breadcrumb-item">
+            <Link to="/" className="text-decoration-none" style={{ color: "#81c408" }}>
+              Home
+            </Link>
+          </li>
+          <li className="breadcrumb-item text-white active" aria-current="page">
+            Checkout
+          </li>
+        </ol>
       </div>
-    </div>
+
+      {/* Checkout Section Start */}
+      <div className="container-fluid py-5">
+        <div className="container py-5">
+          <h1 className="mb-4">Billing details</h1>
+          <form onSubmit={handleSubmit}>
+            <div className="row g-5">
+              {/* Left Column: Billing Details Form */}
+              <div className="col-md-12 col-lg-6 col-xl-7">
+                <div className="row">
+                  <div className="col-md-12 col-lg-6">
+                    <div className="form-item w-100">
+                      <label className="form-label my-3">
+                        First Name<sup>*</sup>
+                      </label>
+                      <input
+                        type="text"
+                        name="firstName"
+                        className="form-control"
+                        required
+                        value={formData.firstName}
+                        onChange={handleChange}
+                      />
+                    </div>
+                  </div>
+                  <div className="col-md-12 col-lg-6">
+                    <div className="form-item w-100">
+                      <label className="form-label my-3">
+                        Last Name<sup>*</sup>
+                      </label>
+                      <input
+                        type="text"
+                        name="lastName"
+                        className="form-control"
+                        required
+                        value={formData.lastName}
+                        onChange={handleChange}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="form-item">
+                  <label className="form-label my-3">
+                    Company Name<sup>*</sup>
+                  </label>
+                  <input
+                    type="text"
+                    name="companyName"
+                    className="form-control"
+                    value={formData.companyName}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                <div className="form-item">
+                  <label className="form-label my-3">
+                    Address <sup>*</sup>
+                  </label>
+                  <input
+                    type="text"
+                    name="address"
+                    className="form-control"
+                    placeholder="House Number Street Name"
+                    required
+                    value={formData.address}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                <div className="form-item">
+                  <label className="form-label my-3">
+                    Town/City<sup>*</sup>
+                  </label>
+                  <input
+                    type="text"
+                    name="city"
+                    className="form-control"
+                    required
+                    value={formData.city}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                <div className="form-item">
+                  <label className="form-label my-3">
+                    Country<sup>*</sup>
+                  </label>
+                  <input
+                    type="text"
+                    name="country"
+                    className="form-control"
+                    required
+                    value={formData.country}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                <div className="form-item">
+                  <label className="form-label my-3">
+                    Postcode/Zip<sup>*</sup>
+                  </label>
+                  <input
+                    type="text"
+                    name="postcode"
+                    className="form-control"
+                    required
+                    value={formData.postcode}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                <div className="form-item">
+                  <label className="form-label my-3">
+                    Mobile<sup>*</sup>
+                  </label>
+                  <input
+                    type="tel"
+                    name="mobile"
+                    className="form-control"
+                    required
+                    value={formData.mobile}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                <div className="form-item">
+                  <label className="form-label my-3">
+                    Email Address<sup>*</sup>
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    className="form-control"
+                    required
+                    value={formData.email}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                <div className="form-check my-3">
+                  <input
+                    type="checkbox"
+                    className="form-check-input"
+                    id="Account-1"
+                    name="createAccount"
+                    checked={formData.createAccount}
+                    onChange={handleChange}
+                  />
+                  <label className="form-check-label" htmlFor="Account-1">
+                    Create an account?
+                  </label>
+                </div>
+                <hr />
+
+                <div className="form-check my-3">
+                  <input
+                    className="form-check-input"
+                    type="checkbox"
+                    id="Address-1"
+                    name="shipToDifferent"
+                    checked={formData.shipToDifferent}
+                    onChange={handleChange}
+                  />
+                  <label className="form-check-label" htmlFor="Address-1">
+                    Ship to a different address?
+                  </label>
+                </div>
+
+                <div className="form-item">
+                  <textarea
+                    name="orderNotes"
+                    className="form-control"
+                    spellCheck="false"
+                    cols="30"
+                    rows="11"
+                    placeholder="Order Notes (Optional)"
+                    value={formData.orderNotes}
+                    onChange={handleChange}
+                  ></textarea>
+                </div>
+              </div>
+
+              {/* Right Column: Order Summary & Payment Options */}
+              <div className="col-md-12 col-lg-6 col-xl-5">
+                <div className="table-responsive">
+                  <table className="table">
+                    <thead>
+                      <tr>
+                        <th scope="col">Products</th>
+                        <th scope="col">Name</th>
+                        <th scope="col">Price</th>
+                        <th scope="col">Quantity</th>
+                        <th scope="col">Total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {cart.length === 0 ? (
+                        <tr>
+                          <td colSpan="5" className="text-center py-4 text-muted">
+                            No products in cart.
+                          </td>
+                        </tr>
+                      ) : (
+                        cart.map((item) => {
+                          const itemPrice = item.price || 0;
+                          const itemQty = item.quantity || 1;
+                          const itemTotal = itemPrice * itemQty;
+
+                          return (
+                            <tr key={item.id}>
+                              <th scope="row">
+                                <div className="d-flex align-items-center mt-2">
+                                  <img
+                                    src={
+                                      item.thumbnail ||
+                                      item.image ||
+                                      "https://placehold.co/90x90"
+                                    }
+                                    className="img-fluid rounded-circle"
+                                    style={{ width: "90px", height: "90px", objectFit: "cover" }}
+                                    alt={item.title}
+                                  />
+                                </div>
+                              </th>
+                              <td className="py-5">{item.title}</td>
+                              <td className="py-5">${itemPrice.toFixed(2)}</td>
+                              <td className="py-5">{itemQty}</td>
+                              <td className="py-5">${itemTotal.toFixed(2)}</td>
+                            </tr>
+                          );
+                        })
+                      )}
+
+                      {/* Subtotal Row */}
+                      <tr>
+                        <th scope="row"></th>
+                        <td className="py-5"></td>
+                        <td className="py-5"></td>
+                        <td className="py-5">
+                          <p className="mb-0 text-dark py-3">Subtotal</p>
+                        </td>
+                        <td className="py-5">
+                          <div className="py-3 border-bottom border-top">
+                            <p className="mb-0 text-dark">${subtotal.toFixed(2)}</p>
+                          </div>
+                        </td>
+                      </tr>
+
+                      {/* Shipping Row */}
+                      <tr>
+                        <th scope="row"></th>
+                        <td className="py-5">
+                          <p className="mb-0 text-dark py-4">Shipping</p>
+                        </td>
+                        <td colSpan="3" className="py-5">
+                          <div className="form-check text-start">
+                            <input
+                              type="radio"
+                              className="form-check-input bg-primary border-0"
+                              id="Shipping-1"
+                              name="shippingOption"
+                              value={0}
+                              checked={shippingCost === 0}
+                              onChange={() => setShippingCost(0)}
+                            />
+                            <label className="form-check-label" htmlFor="Shipping-1">
+                              Free Shipping
+                            </label>
+                          </div>
+                          <div className="form-check text-start">
+                            <input
+                              type="radio"
+                              className="form-check-input bg-primary border-0"
+                              id="Shipping-2"
+                              name="shippingOption"
+                              value={15}
+                              checked={shippingCost === 15}
+                              onChange={() => setShippingCost(15)}
+                            />
+                            <label className="form-check-label" htmlFor="Shipping-2">
+                              Flat rate: $15.00
+                            </label>
+                          </div>
+                          <div className="form-check text-start">
+                            <input
+                              type="radio"
+                              className="form-check-input bg-primary border-0"
+                              id="Shipping-3"
+                              name="shippingOption"
+                              value={8}
+                              checked={shippingCost === 8}
+                              onChange={() => setShippingCost(8)}
+                            />
+                            <label className="form-check-label" htmlFor="Shipping-3">
+                              Local Pickup: $8.00
+                            </label>
+                          </div>
+                        </td>
+                      </tr>
+
+                      {/* Grand Total Row */}
+                      <tr>
+                        <th scope="row"></th>
+                        <td className="py-5">
+                          <p className="mb-0 text-dark text-uppercase py-3">TOTAL</p>
+                        </td>
+                        <td className="py-5"></td>
+                        <td className="py-5"></td>
+                        <td className="py-5">
+                          <div className="py-3 border-bottom border-top">
+                            <p className="mb-0 text-dark">${total.toFixed(2)}</p>
+                          </div>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Direct Bank Transfer */}
+                <div className="row g-4 text-center align-items-center justify-content-center border-bottom py-3">
+                  <div className="col-12">
+                    <div className="form-check text-start my-3">
+                      <input
+                        type="radio"
+                        className="form-check-input bg-primary border-0"
+                        id="Transfer-1"
+                        name="paymentMethod"
+                        value="Transfer"
+                        checked={paymentMethod === "Transfer"}
+                        onChange={() => setPaymentMethod("Transfer")}
+                      />
+                      <label className="form-check-label" htmlFor="Transfer-1">
+                        Direct Bank Transfer
+                      </label>
+                    </div>
+                    {paymentMethod === "Transfer" && (
+                      <p className="text-start text-dark">
+                        Make your payment directly into our bank account. Please use
+                        your Order ID as the payment reference. Your order will not be
+                        shipped until the funds have cleared in our account.
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Check Payments */}
+                <div className="row g-4 text-center align-items-center justify-content-center border-bottom py-3">
+                  <div className="col-12">
+                    <div className="form-check text-start my-3">
+                      <input
+                        type="radio"
+                        className="form-check-input bg-primary border-0"
+                        id="Payments-1"
+                        name="paymentMethod"
+                        value="Check"
+                        checked={paymentMethod === "Check"}
+                        onChange={() => setPaymentMethod("Check")}
+                      />
+                      <label className="form-check-label" htmlFor="Payments-1">
+                        Check Payments
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Cash On Delivery */}
+                <div className="row g-4 text-center align-items-center justify-content-center border-bottom py-3">
+                  <div className="col-12">
+                    <div className="form-check text-start my-3">
+                      <input
+                        type="radio"
+                        className="form-check-input bg-primary border-0"
+                        id="Delivery-1"
+                        name="paymentMethod"
+                        value="COD"
+                        checked={paymentMethod === "COD"}
+                        onChange={() => setPaymentMethod("COD")}
+                      />
+                      <label className="form-check-label" htmlFor="Delivery-1">
+                        Cash On Delivery
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Paypal */}
+                <div className="row g-4 text-center align-items-center justify-content-center border-bottom py-3">
+                  <div className="col-12">
+                    <div className="form-check text-start my-3">
+                      <input
+                        type="radio"
+                        className="form-check-input bg-primary border-0"
+                        id="Paypal-1"
+                        name="paymentMethod"
+                        value="Paypal"
+                        checked={paymentMethod === "Paypal"}
+                        onChange={() => setPaymentMethod("Paypal")}
+                      />
+                      <label className="form-check-label" htmlFor="Paypal-1">
+                        Paypal
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Submit / Place Order Button */}
+                <div className="row g-4 text-center align-items-center justify-content-center pt-4">
+                  <button
+                    type="submit"
+                    className="btn border-secondary py-3 px-4 text-uppercase w-100 text-primary"
+                  >
+                    Place Order
+                  </button>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+      {/* Checkout Section End */}
+
+      <Footer />
+    </>
   );
 }

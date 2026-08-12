@@ -1,12 +1,64 @@
-import React from "react";
+import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router";
 import "../ProductDetails.css";
 import { Link } from "react-router";
-import Navbar from "./Navigation.jsx";
-import Footer from './Footer.jsx'
+
+import Footer from './Footer.jsx';
 
 import { useQuery } from "@tanstack/react-query";
 import { fetchOneproducts } from "./api/api.js";
+
+// Styled Loading Component for Product Details
+function LoadingProductDetails() {
+  const [isHovered, setIsHovered] = useState(false);
+
+  const containerStyle = {
+    padding: "45px 65px",
+    borderRadius: "24px",
+    backgroundColor: "#ffffff",
+    border: isHovered ? "2px solid #81c408" : "2px solid #e9ecef",
+    boxShadow: isHovered
+      ? "0 12px 30px rgba(129, 196, 8, 0.25)"
+      : "0 4px 15px rgba(0, 0, 0, 0.06)",
+    transform: isHovered ? "translateY(-6px) scale(1.02)" : "translateY(0) scale(1)",
+    transition: "all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)",
+    cursor: "pointer",
+    textAlign: "center",
+    maxWidth: "420px",
+    width: "100%",
+  };
+
+  return (
+    <div className="d-flex justify-content-center align-items-center py-5 my-5" style={{ minHeight: "50vh", marginTop: "120px" }}>
+      <div
+        style={containerStyle}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
+        <div className="mb-3">
+          <i
+            className="fas fa-box-open fa-spin display-3"
+            style={{
+              color: "#81c408",
+              filter: isHovered ? "drop-shadow(0 4px 8px rgba(129, 196, 8, 0.4))" : "none",
+              transition: "filter 0.3s ease",
+            }}
+          ></i>
+        </div>
+        <h3
+          className="fw-bold mb-2"
+          style={{
+            color: isHovered ? "#81c408" : "#2d3748",
+            transition: "color 0.3s ease",
+          }}
+        >
+          Loading Details...
+        </h3>
+        <p className="text-muted mb-0 small">Fetching product specs & availability</p>
+      </div>
+    </div>
+  );
+}
 
 function ProductDetails({ cart = [], setCart }) {
   const { id } = useParams();
@@ -17,12 +69,30 @@ function ProductDetails({ cart = [], setCart }) {
     queryFn: () => fetchOneproducts(id),
   });
 
+  // Styled Loading State with Navbar & Footer integration
   if (isLoading) {
-    return <h1> Loading........</h1>;
+    return (
+      <>
+        
+        <LoadingProductDetails />
+        <Footer />
+      </>
+    );
   }
 
   if (isError) {
-    return <h1>{error.message}</h1>;
+    return (
+      <>
+        <Navbar />
+        <div className="text-center py-5 my-5" style={{ marginTop: "120px" }}>
+          <h2 className="text-danger">Error: {error.message}</h2>
+          <Link to="/shop" className="btn text-white mt-3" style={{ backgroundColor: "#81c408" }}>
+            Back to Shop
+          </Link>
+        </div>
+        <Footer />
+      </>
+    );
   }
 
   const product = data;
@@ -56,14 +126,14 @@ function ProductDetails({ cart = [], setCart }) {
 
   return (
     <>
-     <Navbar/>
-     <br/><br/><br/><br/><br/>
+      <Navbar />
+      <br /><br /><br /><br /><br />
 
       <main className="details-page">
         {/* Breadcrumb */}
         <div className="breadcrumb">
           <Link to="/">
-           <p>Home </p> 
+            <p>Home </p>
           </Link>  / {product.title}
         </div>
 
@@ -132,7 +202,7 @@ function ProductDetails({ cart = [], setCart }) {
           </div>
         </section>
       </main>
-      <Footer/>
+      <Footer />
     </>
   );
 }

@@ -4,6 +4,7 @@ import { Link } from 'react-router';
 // Import template styles
 import '../assets/css/bootstrap.min.css';
 import '../assets/css/style.css';
+import Copyright from './copyright';
 
 function Footer() {
   const [email, setEmail] = useState('');
@@ -15,7 +16,7 @@ function Footer() {
     setEmail('');
   };
 
-  return (
+  return (<>
     <div className="container-fluid bg-dark text-white-50 footer pt-5 mt-5">
       <div className="container py-5">
         
@@ -132,7 +133,8 @@ function Footer() {
 
       </div>
     </div>
-  );
+    <Copyright/>  
+  </>);
 }
 
 export default Footer;
