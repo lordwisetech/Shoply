@@ -140,7 +140,7 @@ function Home({ cart = [], setCart }) {
   return (
     <>
       
-<br/><br/><br/>
+<br/><br/><br/><br/><br/><br/>
       <div className="home">
         <section className="hero">
           <div className="hero-text">
